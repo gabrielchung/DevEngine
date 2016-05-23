@@ -1,0 +1,87 @@
+#main {
+    margin: 0;
+    padding: 0 20px;
+    background-color: #cce6f1;
+    max-width: 500px;
+}
+#main button {
+    color: #fff;
+    background-color: #7fc2dc;
+    border: none;
+}
+#main button:hover {
+    color: #fff;
+    background-color: #0085ba;
+    border: none;
+}
+#list {
+    border-style: solid;
+    border-color: #aaaaaa;
+    border-width: 3px;
+    list-style-type: none;
+    cursor: pointer;
+    margin: 0;
+    padding: 0;
+    background-color: #7fc2dc;
+}
+.item {
+    color: #fff;
+    
+    /* display: block; */
+    padding: 10px 20px;
+    border-bottom: 1px solid #ccc;
+    
+    /* Make items unselectable [START] */
+    -webkit-user-select: none; /* Chrome/Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+ */
+
+    /* Rules below not implemented in browsers yet */
+    -o-user-select: none;
+    user-select: none;
+    /* Make items unselectable [END] */
+}
+.selected-item {
+    color: #fff;
+    background-color: #0085ba;
+    border-bottom: 1px solid #0085ba;
+}
+.selected-item:hover {
+    color: #fff;
+    background-color: #0085ba;
+}
+.unselected-item:hover {
+    /* background-color: #ffffcc; */
+    color: #fff;
+    background-color: #4ca9ce;
+    border-bottom: 1px solid #4ca9ce;
+}
+.controlPanel {
+    margin: 0;
+    padding: 10px 0;
+    /* padding: 10px 20px; */
+    /* background-color: yellow; */
+    background-color: #cce6f1;
+}
+.controlPanel button {
+    margin: 3px;
+    padding: 5px 10px;
+}
+#headPanel {
+    text-align: right;
+}
+#footPanel {
+    text-align: center;
+}
+#pageControlsDiv {
+    margin-left: 10px;
+}
+#pageControlsDiv input {
+    width: 25px;
+}
+#pageControlsDiv .highlighted-textbox {
+    background-color: #ff99cc;
+}
+#pageNumber {
+    width: 30px;
+}
