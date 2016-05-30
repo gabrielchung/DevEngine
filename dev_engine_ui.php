@@ -50,6 +50,126 @@ namespace dev_engine\ui;
 
 	}
 
+	class VariableName {
+		
+		const spaceStr = '_space_';
+		
+		public static function convert_to_special_space($value) {
+			return str_replace(' ', VariableName::spaceStr, $value);
+		}
+		
+		public static function convert_from_special_space($value) {
+			return str_replace(VariableName::spaceStr, ' ', $value);
+		}
+		
+	}
+	
+	class Data {
+		
+		public static function update_obj_values($objectType, $objectID, $displayFilter, $aryKeyValuePairs) {
+			
+			$obj = \dev_engine\ObjectQuery::retrieve(array('table_name'=>$objectType, 'id'=>$objectID));
+			
+			if (null === $obj) {
+				
+				throw new \Exception('Object cannot be found');
+				
+			}
+			
+			foreach ($displayFilter as $tmpDisplayFilterObj) {
+			
+				$displayFilterObj = (array) $tmpDisplayFilterObj; //convert the standard object into array
+				
+				if ('displayFilter' === $displayFilterObj['key']) {
+
+					//system variable
+					
+					//do nothing
+			
+				} elseif ('slug' === $displayFilterObj['key']) {
+			
+					$obj->slug = $aryKeyValuePairs[$displayFilterObj['key']];
+			
+				} elseif ('title' === $displayFilterObj['key']) {
+					
+					$obj->title = $aryKeyValuePairs[$displayFilterObj['key']];
+					$obj->update();
+					
+				} elseif ('description' === $displayFilterObj['key']) {
+					
+					$obj->description = $aryKeyValuePairs[$displayFilterObj['key']];
+					$obj->update();
+					
+				} else {
+					
+					$obj->update_custom_value(
+												 $displayFilterObj['key']
+												,$aryKeyValuePairs[$displayFilterObj['key']]
+											 );
+					
+				}
+				
+			}
+			
+		}
+		
+	}
+
+	class UserControl {
+		
+		public static function gen_controls($displayFilter, $aryObjValuesKeyValuePairs) {
+			
+			?>
+			<form method="post">			
+			<?php
+			
+			foreach ($displayFilter as $displayFilterObj) {
+				
+				UserControl::gen_control($displayFilterObj['type']
+										,$displayFilterObj['key']
+										,$aryObjValuesKeyValuePairs[$displayFilterObj['key']]);
+				
+			}
+			
+			?>
+			<input type="submit" value="Submit" />
+			</form>
+			<?php
+			
+		}
+		
+		private static function gen_control($controlType, $key, $value) {
+			
+			switch ($controlType) {
+				
+				case 'hidden':
+					?>
+					<input type="hidden" name="<?php echo VariableName::convert_to_special_space($key); ?>" value="<?php echo $value; ?>" />
+					<?php
+					break;
+				
+				case 'textbox':
+					?>
+					<div><?php echo ucfirst($key); ?>: <input type="text" name="<?php echo VariableName::convert_to_special_space($key); ?>" value="<?php echo $value; ?>" /></div>
+					<?php
+					break;
+					
+				case 'textarea':
+					?>
+					<div><?php echo ucfirst($key); ?>: <textarea name="<?php echo VariableName::convert_to_special_space($key); ?>"><?php echo $value; ?></textarea></div>
+					<?php
+					break;
+				
+				default:
+					throw new \Exception('Control type cannot be found');
+					break;
+			}
+			
+			
+		}
+		
+	}
+
 	class UI {
 
 		public static function load_dev_engine_ui_head_files() {
@@ -239,7 +359,7 @@ namespace dev_engine\ui;
 				
 				if (null === ($parentObj = \dev_engine\ObjectQuery::retrieve(array('table_name'=>$parentObjectType, 'id'=>$objectID)))) {
 
-					throw new Exception('Parent object cannot be retrieved');
+					throw new \Exception('Parent object cannot be retrieved');
 					
 				} else {
 
@@ -873,6 +993,53 @@ namespace dev_engine\ui;
 			<?php
 		}
 		
+		public static function get_single($objectType, $objectID, $displayFilter=null) {
+			
+			$obj = \dev_engine\ObjectQuery::retrieve(array('table_name'=>$objectType, 'id'=>$objectID));
+    
+			if (null === $obj) {
+				echo 'Product cannot be found';
+				exit;
+			}
+			
+			// Display Filter
+			
+			$finalDisplayFilter=array(
+								 array('key'=>'displayFilter','type'=>'hidden')
+								,array('key'=>'title','type'=>'textbox')
+								,array('key'=>'description','type'=>'textarea')
+							);
+			
+			if (null !== $displayFilter) {
+			
+				foreach ($displayFilter as $displayFilterItem) {
+			
+					array_push($finalDisplayFilter, $displayFilterItem);
+				
+				}
+							
+			}
+			
+			// Object Values
+			
+			$aryObjValuesKeyValuePairs = array('displayFilter'=>htmlentities(json_encode($finalDisplayFilter), ENT_QUOTES)
+											  ,'title'=>$obj->title
+											  ,'description'=>$obj->description
+											  );
+			
+			if (null !== ($customValues = $obj->retrieve_custom_values())) {
+				
+				foreach ($customValues as $customValueObj) {
+					
+					$aryObjValuesKeyValuePairs[$customValueObj->slug] = $customValueObj->description;
+					
+				}
+
+			}
+
+			\dev_engine\ui\UserControl::gen_controls($finalDisplayFilter, $aryObjValuesKeyValuePairs);
+						
+		}
 
 		public static function edit_item($objectType, $objectID, $js_completionCallBackFuncName='') {
 			UI::edit_item_with_parent($objectType, $objectID, $js_completionCallBackFuncName);
