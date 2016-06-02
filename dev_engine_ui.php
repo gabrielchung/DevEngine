@@ -62,13 +62,17 @@ namespace dev_engine\ui;
 			return str_replace(VariableName::spaceStr, ' ', $value);
 		}
 		
+		public static function convert_spaces_to_underscores($value) {
+			return str_replace(' ', '_', $value);
+		}
+		
 	}
 	
 	class Data {
 		
 		public static function update_obj_values($objectType, $objectID, $displayFilter, $aryKeyValuePairs) {
 			
-			$obj = \dev_engine\ObjectQuery::retrieve(array('table_name'=>$objectType, 'id'=>$objectID));
+			$obj = \dev_engine\ObjectQuery::retrieve(array('object_type_name'=>$objectType, 'id'=>$objectID));
 			
 			if (null === $obj) {
 				
@@ -99,7 +103,7 @@ namespace dev_engine\ui;
 					
 					$obj->description = $aryKeyValuePairs[$displayFilterObj['key']];
 					$obj->update();
-					
+										
 				} else {
 					
 					$obj->update_custom_value(
@@ -125,9 +129,15 @@ namespace dev_engine\ui;
 			
 			foreach ($displayFilter as $displayFilterObj) {
 				
+				if ( isset($aryObjValuesKeyValuePairs[$displayFilterObj['key']]) ) {
+					$controlValue = $aryObjValuesKeyValuePairs[$displayFilterObj['key']];
+				} else {
+					$controlValue = null;
+				}
+				
 				UserControl::gen_control($displayFilterObj['type']
 										,$displayFilterObj['key']
-										,$aryObjValuesKeyValuePairs[$displayFilterObj['key']]);
+										,$controlValue);
 				
 			}
 			
@@ -139,6 +149,10 @@ namespace dev_engine\ui;
 		}
 		
 		private static function gen_control($controlType, $key, $value) {
+			
+			if (null === $value) {
+				$value = '';
+			}
 			
 			switch ($controlType) {
 				
@@ -160,8 +174,43 @@ namespace dev_engine\ui;
 					<?php
 					break;
 				
+				case 'imageUpload':
+					$jsKeyID = VariableName::convert_spaces_to_underscores($key);
+					?>
+					<script>
+						var dev_engine_ui_uploadImageKeyID = '<?php echo $jsKeyID; ?>';
+						function dev_engine_ui_uploadImageHandle(elemID, base64ImgElemID, previewElemID) {
+							
+							var uploadImageElem = document.getElementById(elemID+'_'+dev_engine_ui_uploadImageKeyID);
+							
+							if (uploadImageElem.files && uploadImageElem.files[0]) {
+								var FR = new FileReader();
+								FR.onload = function(e) {
+									document.getElementById(base64ImgElemID+'_'+dev_engine_ui_uploadImageKeyID).value = e.target.result;
+									//document.getElementById(previewElemID+'_'+keyID).src = e.target.result;
+									dev_engine_ui_uploadImagePreview(base64ImgElemID, previewElemID);
+								}
+								
+								FR.readAsDataURL(uploadImageElem.files[0]);
+							}
+						}
+						
+						function dev_engine_ui_uploadImagePreview(elemID, previewElemID) {
+							console.log('foo');
+							document.getElementById(previewElemID+'_'+dev_engine_ui_uploadImageKeyID).src = document.getElementById(elemID+'_'+dev_engine_ui_uploadImageKeyID).value;
+						}
+						
+					</script>
+					<div><?php echo ucfirst($key); ?>: 
+						<input onchange="dev_engine_ui_uploadImageHandle('dev_engine_ui_uploadImage', 'dev_engine_ui_uploadImageBase64Str', 'dev_engine_ui_imagePreview')" id="dev_engine_ui_uploadImage_<?php echo $jsKeyID; ?>" type="file" />
+						<input id="dev_engine_ui_uploadImageBase64Str_<?php echo $jsKeyID; ?>" type="text" style="display:none;" name="<?php echo VariableName::convert_to_special_space($key); ?>" value="<?php echo $value; ?>">
+						<img id="dev_engine_ui_imagePreview_<?php echo $jsKeyID; ?>" /></div>
+					<script>dev_engine_ui_uploadImagePreview('dev_engine_ui_uploadImageBase64Str', 'dev_engine_ui_imagePreview');</script>
+					<?php
+					break;
+				
 				default:
-					throw new \Exception('Control type cannot be found');
+					throw new \Exception('Control type ('.$controlType.') cannot be found');
 					break;
 			}
 			
@@ -341,7 +390,7 @@ namespace dev_engine\ui;
 			
 				//Just load all items for that object
 				
-				$args = array('table_name'=>$objectType);
+				$args = array('object_type_name'=>$objectType);
 
 				$totalObjectCount = \dev_engine\ObjectQuery::objCount($args);	
 
@@ -357,7 +406,7 @@ namespace dev_engine\ui;
 				
 				//Load all items for the relationship
 				
-				if (null === ($parentObj = \dev_engine\ObjectQuery::retrieve(array('table_name'=>$parentObjectType, 'id'=>$objectID)))) {
+				if (null === ($parentObj = \dev_engine\ObjectQuery::retrieve(array('object_type_name'=>$parentObjectType, 'id'=>$objectID)))) {
 
 					throw new \Exception('Parent object cannot be retrieved');
 					
@@ -381,7 +430,7 @@ namespace dev_engine\ui;
 					
 					foreach ($aryRelationshipObj as $relationshipObj) {
 						
-						if (null !== ($obj = \dev_engine\ObjectQuery::retrieve(array('table_name'=>$objectType, 'id'=>$relationshipObj->secondary_id)))) {
+						if (null !== ($obj = \dev_engine\ObjectQuery::retrieve(array('object_type_name'=>$objectType, 'id'=>$relationshipObj->secondary_id)))) {
 							
 							array_push($aryObj, $obj);
 							
@@ -995,7 +1044,7 @@ namespace dev_engine\ui;
 		
 		public static function get_single($objectType, $objectID, $displayFilter=null) {
 			
-			$obj = \dev_engine\ObjectQuery::retrieve(array('table_name'=>$objectType, 'id'=>$objectID));
+			$obj = \dev_engine\ObjectQuery::retrieve(array('object_type_name'=>$objectType, 'id'=>$objectID));
     
 			if (null === $obj) {
 				echo 'Product cannot be found';
@@ -1047,7 +1096,7 @@ namespace dev_engine\ui;
 
 		public static function edit_item_with_parent($objectType, $objectID, $js_completionCallBackFuncName='', $parentObjectID=null, $parentObjectType='') {
 
-			$obj = \dev_engine\ObjectQuery::retrieve(array('table_name'=>$objectType, 'id'=>$objectID));
+			$obj = \dev_engine\ObjectQuery::retrieve(array('object_type_name'=>$objectType, 'id'=>$objectID));
 
 			if (null === $obj) {
 				

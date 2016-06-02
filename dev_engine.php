@@ -1156,12 +1156,31 @@ namespace dev_engine;
 		}
 		
 		public static function retrieve($args) {
+
+			//
+			// For the case where only object_name is set 
+			// 
+			if ( isset($args['object_type_name']) && ( ! isset($args['table_name']) ) ) {
+				
+				$args['table_name'] = $args['object_type_name'];
+				
+			}
 				
 			if (isset($args['table_name']) && isset($args['id'])) {
 					
 				return DBObject::retrieve_by_id($args['table_name'], $args['id']);
 		
 			} else {
+		
+				if ( ( isset($args['object_type_name']) ) && ( ! isset($args['object_type_id']) ) ) {
+					
+					if ( null !== ($objectTypeObj = DBObject::get_object_type($args['object_type_name'])) ) {
+						
+						$args['object_type_id'] = $objectTypeObj->id; 
+						
+					}
+					
+				}
 		
 				if (isset($args['exact_match']) && (true === $args['exact_match'])) {
 						
