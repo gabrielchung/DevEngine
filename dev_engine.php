@@ -21,10 +21,15 @@ namespace dev_engine;
 		
 		public static function get_dev_engine_path() {
 			
+			$dev_engine_path = dirname(__FILE__); //assume this file is in the dev engine root path
+            $request_uri_path = dirname($_SERVER['REQUEST_URI']);
+			$absolute_request_uri_path = getcwd();
+
+			$documentRoot = substr($absolute_request_uri_path, 0, strpos($absolute_request_uri_path, $request_uri_path));
+
 			return (DevEngine::is_secure() ? 'https://' : 'http://')
-					. $_SERVER['SERVER_NAME']
-					. substr(dirname(__FILE__), strrpos(dirname(__FILE__), dirname($_SERVER['REQUEST_URI'])));
-			
+					. $_SERVER['SERVER_NAME'] . '/'
+					. substr($dev_engine_path, strlen($documentRoot));
 			
 			
 			// return (DevEngine::is_secure() ? 'https://' : 'http://')
