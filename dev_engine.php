@@ -21,14 +21,20 @@ namespace dev_engine;
 		
 		public static function get_dev_engine_path() {
 			
-			$dev_engine_path = dirname(__FILE__); //assume this file is in the dev engine root path
-            $request_uri_path = dirname($_SERVER['REQUEST_URI']);
+			$dev_engine_path = dirname(__FILE__);
+            // $request_uri_path = dirname($_SERVER['REQUEST_URI']);
+			$request_uri_path = dirname(substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '?')-1));
+
+            if (strpos(basename($_SERVER['REQUEST_URI']), '.') < 0) {
+                 $request_uri_path .= '/' . basename($_SERVER['REQUEST_URI']);
+            }
+
 			$absolute_request_uri_path = getcwd();
 
 			$documentRoot = substr($absolute_request_uri_path, 0, strpos($absolute_request_uri_path, $request_uri_path));
 
 			return (DevEngine::is_secure() ? 'https://' : 'http://')
-					. $_SERVER['SERVER_NAME'] . '/'
+					. $_SERVER['SERVER_NAME']
 					. substr($dev_engine_path, strlen($documentRoot));
 			
 			
@@ -887,6 +893,7 @@ namespace dev_engine;
 		public $secondary_id;
 		public $is_deleted;
 		public $object_type_slug;
+		public $custom_values = array();
 
 		public function __construct($slug=null, $title=null, $description=null, $object_type_slug=null) {
 			
@@ -1201,7 +1208,8 @@ namespace dev_engine;
 					throw new \Exception('Table_name is not provided.');
 				}
 		
-				return DBObject::retrieve_by_values_in_detail(
+				$objects =
+					 DBObject::retrieve_by_values_in_detail(
 						$args['table_name']
 						,empty($args['slug']) ? '%' : $match_character . $args['slug'] . $match_character
 						,empty($args['title']) ? '%' : $match_character . $args['title'] . $match_character
@@ -1214,8 +1222,36 @@ namespace dev_engine;
 						,empty($args['count']) ? false : $args['count']
 						);
 		
+				if (isset($args['get_all_custom_values']) && (true === $args['get_all_custom_values'])) {
+
+					ObjectQuery::get_all_custom_values_for_all_objects($objects);
+
+				}
+
+				return $objects;
+
 			}
 			
+		}
+
+		private static function get_all_custom_values_for_all_objects($objects) {
+
+			foreach ($objects as $obj) {
+
+				$customValues = $obj->retrieve_custom_values();
+
+				if (null === $customValues) {
+					continue;
+				}
+
+				foreach ($customValues as $objCustomValue) {
+
+					$obj->custom_values[$objCustomValue->slug] = $objCustomValue->description;
+
+				}
+
+			}
+
 		}
 
 		public static function retrieve_by_custom_value($object_type, $key, $value, $retrieve_actual_obj_instead_of_just_ID=true, $table_name=null) {
