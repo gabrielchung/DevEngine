@@ -174,6 +174,22 @@ namespace dev_engine\ui;
 					<?php
 					break;
 				
+				case 'checkbox':
+					?>
+					<input type="hidden" id="bizsys_checkbox_hidden_<?php echo VariableName::convert_to_special_space($key); ?>" name="<?php echo VariableName::convert_to_special_space($key); ?>" value="<?php if (!empty($value)) { echo $value; } else { echo 'false'; } ?>" />
+					<div><label><?php echo ucfirst($key); ?>: <input id="bizsys_checkbox_<?php echo VariableName::convert_to_special_space($key); ?>" type="checkbox" <?php if (filter_var($value, FILTER_VALIDATE_BOOLEAN)) echo 'checked'; ?> /></label></div>
+					<script>
+						$('#bizsys_checkbox_<?php echo VariableName::convert_to_special_space($key); ?>').on('click', function(){
+							
+							var resultValue = ($('#bizsys_checkbox_<?php echo VariableName::convert_to_special_space($key); ?>').is(':checked'));
+
+							$('#bizsys_checkbox_hidden_<?php echo VariableName::convert_to_special_space($key); ?>').val(resultValue);
+
+						});
+					</script>
+					<?php
+					break;
+
 				case 'imageUpload':
 					$jsKeyID = VariableName::convert_spaces_to_underscores($key);
 					?>
@@ -196,7 +212,6 @@ namespace dev_engine\ui;
 						}
 						
 						function dev_engine_ui_uploadImagePreview(elemID, previewElemID) {
-							console.log('foo');
 							document.getElementById(previewElemID+'_'+dev_engine_ui_uploadImageKeyID).src = document.getElementById(elemID+'_'+dev_engine_ui_uploadImageKeyID).value;
 						}
 						
