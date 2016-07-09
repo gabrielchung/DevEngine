@@ -31,7 +31,11 @@ namespace dev_engine;
 
 			$absolute_request_uri_path = getcwd();
 
-			$documentRoot = substr($absolute_request_uri_path, 0, strpos($absolute_request_uri_path, $request_uri_path));
+			if ($request_uri_path === '/') {
+				$documentRoot = $absolute_request_uri_path;
+			} else {
+				$documentRoot = substr($absolute_request_uri_path, 0, strpos($absolute_request_uri_path, $request_uri_path));
+			}
 
 			return (DevEngine::is_secure() ? 'https://' : 'http://')
 					. $_SERVER['SERVER_NAME']
