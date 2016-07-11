@@ -121,7 +121,7 @@ namespace dev_engine\ui;
 
 	class UserControl {
 		
-		public static function gen_controls($displayFilter, $aryObjValuesKeyValuePairs) {
+		public static function gen_controls($displayFilter, $aryObjValuesKeyValuePairs, $dataForControls) {
 			
 			?>
 			<form method="post">			
@@ -135,9 +135,16 @@ namespace dev_engine\ui;
 					$controlValue = null;
 				}
 				
+				if (isset($dataForControls[$displayFilterObj['key']])) {
+					$dataForControl = $dataForControls[$displayFilterObj['key']];
+				} else {
+					$dataForControl = null;
+				}
+
 				UserControl::gen_control($displayFilterObj['type']
 										,$displayFilterObj['key']
-										,$controlValue);
+										,$controlValue
+										,$dataForControl);
 				
 			}
 			
@@ -148,7 +155,7 @@ namespace dev_engine\ui;
 			
 		}
 		
-		private static function gen_control($controlType, $key, $value) {
+		private static function gen_control($controlType, $key, $value, $data) {
 			
 			if (null === $value) {
 				$value = '';
@@ -187,6 +194,27 @@ namespace dev_engine\ui;
 
 						});
 					</script>
+					<?php
+					break;
+
+				case 'dropdown':
+					?>
+					<div><label><?php echo ucfirst($key); ?>:
+					<select id="bizsys_dropdown_<?php echo VariableName::convert_to_special_space($key); ?>" name="<?php echo VariableName::convert_to_special_space($key); ?>">
+					<?php
+						foreach ($data as $optionKey => $optionValue) {
+
+							if ($value === $optionKey) {
+								$selected = ' selected="selected"';
+							} else {
+								$selected = '';
+							}
+
+							echo '<option value="'.$optionKey.'"'.$selected.'>'.$optionValue.'</option>';
+						}
+					?>
+					</select>
+					</div>
 					<?php
 					break;
 
@@ -1057,7 +1085,7 @@ namespace dev_engine\ui;
 			<?php
 		}
 		
-		public static function get_single($objectType, $objectID, $displayFilter=null) {
+		public static function get_single($objectType, $objectID, $displayFilter=null, $dataForControls=null) {
 			
 			$obj = \dev_engine\ObjectQuery::retrieve(array('object_type_name'=>$objectType, 'id'=>$objectID));
     
@@ -1101,7 +1129,7 @@ namespace dev_engine\ui;
 
 			}
 
-			\dev_engine\ui\UserControl::gen_controls($finalDisplayFilter, $aryObjValuesKeyValuePairs);
+			\dev_engine\ui\UserControl::gen_controls($finalDisplayFilter, $aryObjValuesKeyValuePairs, $dataForControls);
 						
 		}
 
