@@ -204,7 +204,7 @@ namespace dev_engine\ui;
 					<?php
 						foreach ($data as $optionKey => $optionValue) {
 
-							if ($value === $optionKey) {
+							if ($value == $optionKey) {
 								$selected = ' selected="selected"';
 							} else {
 								$selected = '';
