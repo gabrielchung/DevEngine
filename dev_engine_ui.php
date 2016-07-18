@@ -119,6 +119,33 @@ namespace dev_engine\ui;
 		
 	}
 
+	class Image {
+
+		public static function generate_image_url($objectTypeName, $id, $key) {
+			return \dev_engine\DevEngine::get_dev_engine_path() . '/dev_engine_ui_image.php?object_type_name='.urlencode($objectTypeName).'&id='.$id.'&key='.urlencode($key);
+		}
+
+		public static function decode_image_str($encodedStr) {
+
+			//remove meta data
+			$actualEncodedStr = substr($encodedStr, strpos($encodedStr, ',')+1); 
+
+			$imgdata = base64_decode($actualEncodedStr);
+
+			return $imgdata;
+
+		}
+
+		public static function get_image_type($encodedStr) {
+
+			// data:image/ => 10 characters
+			$tmp = substr($encodedStr, 11);
+			return substr($tmp, 0, strpos($tmp, ';')); 
+
+		}
+
+	}
+
 	class UserControl {
 		
 		public static function gen_controls($displayFilter, $aryObjValuesKeyValuePairs, $dataForControls) {
@@ -160,7 +187,7 @@ namespace dev_engine\ui;
 			if (null === $value) {
 				$value = '';
 			}
-			
+
 			switch ($controlType) {
 				
 				case 'hidden':
@@ -230,6 +257,7 @@ namespace dev_engine\ui;
 							if (uploadImageElem.files && uploadImageElem.files[0]) {
 								var FR = new FileReader();
 								FR.onload = function(e) {
+									console.log(base64ImgElemID+'_'+dev_engine_ui_uploadImageKeyID);
 									document.getElementById(base64ImgElemID+'_'+dev_engine_ui_uploadImageKeyID).value = e.target.result;
 									//document.getElementById(previewElemID+'_'+keyID).src = e.target.result;
 									dev_engine_ui_uploadImagePreview(base64ImgElemID, previewElemID);
@@ -240,15 +268,20 @@ namespace dev_engine\ui;
 						}
 						
 						function dev_engine_ui_uploadImagePreview(elemID, previewElemID) {
-							document.getElementById(previewElemID+'_'+dev_engine_ui_uploadImageKeyID).src = document.getElementById(elemID+'_'+dev_engine_ui_uploadImageKeyID).value;
+							//document.getElementById(previewElemID+'_'+dev_engine_ui_uploadImageKeyID).src = document.getElementById(elemID+'_'+dev_engine_ui_uploadImageKeyID).value;
+							//document.getElementById(previewElemID+'_'+dev_engine_ui_uploadImageKeyID).src = document.getElementById(elemID+'_'+dev_engine_ui_uploadImageKeyID).value;
+							// document.getElementById(previewElemID+'_'+dev_engine_ui_uploadImageKeyID).backgroundImage = document.getElementById(elemID+'_'+dev_engine_ui_uploadImageKeyID).value;
 						}
 						
 					</script>
 					<div><?php echo ucfirst($key); ?>: 
 						<input onchange="dev_engine_ui_uploadImageHandle('dev_engine_ui_uploadImage', 'dev_engine_ui_uploadImageBase64Str', 'dev_engine_ui_imagePreview')" id="dev_engine_ui_uploadImage_<?php echo $jsKeyID; ?>" type="file" />
-						<input id="dev_engine_ui_uploadImageBase64Str_<?php echo $jsKeyID; ?>" type="text" style="display:none;" name="<?php echo VariableName::convert_to_special_space($key); ?>" value="<?php echo $value; ?>">
-						<img id="dev_engine_ui_imagePreview_<?php echo $jsKeyID; ?>" /></div>
-					<script>dev_engine_ui_uploadImagePreview('dev_engine_ui_uploadImageBase64Str', 'dev_engine_ui_imagePreview');</script>
+						<?php /* <input id="dev_engine_ui_uploadImageBase64Str_<?php echo $jsKeyID; ?>" type="text" style="display:none;" name="<?php echo VariableName::convert_to_special_space($key); ?>" value="<?php echo $value; ?>"> */ ?>
+						<textarea id="dev_engine_ui_uploadImageBase64Str_<?php echo $jsKeyID; ?>" style="display:none;" name="<?php echo VariableName::convert_to_special_space($key); ?>"><?php echo $value; ?></textarea>
+						<?php /*<img id="dev_engine_ui_imagePreview_<?php echo $jsKeyID; ?>" />*/ ?>
+						<img id="dev_engine_ui_imagePreview_<?php echo $jsKeyID; ?>" style="width:100px;height:100px;" src="<?php echo $data['imageUrl']; ?>"></img>
+					</div>
+					<!--<script>dev_engine_ui_uploadImagePreview('dev_engine_ui_uploadImageBase64Str', 'dev_engine_ui_imagePreview');</script>-->
 					<?php
 					break;
 				
