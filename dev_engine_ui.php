@@ -356,24 +356,34 @@ namespace dev_engine\ui;
 				exit;
 			}
 
+			?>
+			<script>
+			var dialogRandNum;
+			</script>
+			<?php
+
 			if ($withMainDiv) {
 				?>
 					<script>
+						function genDialogRandNum() {
+							console.log('genDRN');
+							var randNum = Math.trunc(Math.random() * 100000000000)
+							window['dialogRandNum'] = randNum;
+							console.log('randNum: '+randNum);
+							console.log('dialogRandNum: '+dialogRandNum);
+						}
+
 						//
 						//Main Div script section
 						//
-						var dialogRandNum = -1;
-						var jqyuiDialogOptions = { autoOpen: false, modal: true };
+						var jqyuiDialogOptions = { autoOpen: false, modal: true, close: genDialogRandNum };
 						var offset = <?php echo $offset; ?>;
 						var itemRowCount = <?php echo $objectRowCount; ?>;
+						genDialogRandNum(); //init dialog rand num
 						
-						function genDialogRandNum() {
-							var randNum = Math.trunc(Math.random() * 100000000000)
-							dialogRandNum = randNum;
-						}
-						
+
 						function getDialogID() {
-							var result = 'getList_itemDialog'+dialogRandNum;
+							var result = 'getList_itemDialog'+window['dialogRandNum'];
 							return result;
 						}
 						
@@ -412,10 +422,47 @@ namespace dev_engine\ui;
 							
 						}
 
-						function openDialog(content) {
+						function openEditDialog(data) {
 							
-							$('#getList_itemDialog').html('<div id="'+getDialogID()+'">'+content+'</div>');
+							// $('#getList_itemDialog').html('<div id="'+getDialogID()+'">'+content+'</div>');
 							
+							var dialogTemplate = $('#getList_editItemDialogTemplate').clone();
+							$(dialogTemplate).attr('id', getDialogID());
+
+							$('#getList_itemDialog').append(dialogTemplate);
+
+							//data initialization [START]
+							editItem_itemID = selectedItems[0];
+
+							var thisEditItem = getItemByID(selectedItems[0])
+
+							$(dialogTemplate).find('#itemName').val(thisEditItem.title);
+							$(dialogTemplate).find('#itemDescription').val(thisEditItem.description);
+
+							//data initialization [END]
+							
+
+							$('#'+getDialogID()).dialog(jqyuiDialogOptions);
+							
+							$('#'+getDialogID()).dialog('open');
+							
+						}
+
+						//function openCreateDialog(content) {
+						function openCreateDialog() {
+							
+							// $('#getList_itemDialog').html('<div id="'+getDialogID()+'">'+content+'</div>');
+							
+							console.log('here');
+
+							var dialogTemplate = $('#getList_createItemDialogTemplate').clone();
+							$(dialogTemplate).attr('id', getDialogID());
+
+							$('#getList_itemDialog').append(dialogTemplate);
+
+							console.log($('#getList_itemDialog').html());
+							console.log($.ui.version);
+
 							$('#'+getDialogID()).dialog(jqyuiDialogOptions);
 							
 							$('#'+getDialogID()).dialog('open');
@@ -551,7 +598,7 @@ namespace dev_engine\ui;
 				
 				foreach ($aryObj as $obj) {
 					
-					$javascriptObjDataOutput .= ', ' . json_encode(array('id'=>$obj->id, 'title'=>$obj->title), JSON_FORCE_OBJECT);
+					$javascriptObjDataOutput .= ', ' . json_encode(array('id'=>$obj->id, 'title'=>$obj->title, 'description'=>$obj->description), JSON_FORCE_OBJECT);
 					
 					//echo '<li class="item unselected-item" unselectable="on" data-id="' . $obj->id. '">' . $obj->title . '</li>';
 				}				
@@ -581,6 +628,8 @@ namespace dev_engine\ui;
 
 					function getList_createItem() {
 						
+						console.log('getList_createItem');
+
 						var action = 'create';
 						
 						//prepare getData
@@ -597,16 +646,26 @@ namespace dev_engine\ui;
 					<?php
 					}
 					?>							
-						$.get('<?php echo \dev_engine\DevEngine::get_dev_engine_path(); ?>/dev_engine_ui_render.php', getData,
-								function(resultData) {
-									if (-1 != resultData) {
-										//$('#getList_item').html(resultData);
-										//$('#'+getDialogID()).html(resultData);
+						// $.get('<?php echo \dev_engine\DevEngine::get_dev_engine_path(); ?>/dev_engine_ui_render.php', getData,
+						// 		function(resultData) {
+						// 			if (-1 != resultData) {
+						// 				//$('#getList_item').html(resultData);
+						// 				//$('#'+getDialogID()).html(resultData);
 										
-										openDialog(resultData);
-									}
-								}
-							);
+						// 				openDialog(resultData);
+						// 			}
+						// 		}
+						// 	);
+						openCreateDialog();
+					}
+
+					function getItemByID(itemID) {
+						for (var i=0; i<itemData.length; i++) {
+							if (itemID == itemData[i].id) {
+								return itemData[i];
+							}
+						}
+						return null;
 					}
 
 					function getList_openItems() {
@@ -655,16 +714,18 @@ namespace dev_engine\ui;
 					<?php
 						}
 					?>		
-							$.get('<?php echo \dev_engine\DevEngine::get_dev_engine_path(); ?>/dev_engine_ui_render.php', getData,
-								function(resultData) {
-									if (-1 != resultData) {
-										//$('#getList_item').html(resultData);
-										//$('#'+getDialogID()).html(resultData);
-										openDialog(resultData);
-									}
-								}
-							);
+							// $.get('<?php echo \dev_engine\DevEngine::get_dev_engine_path(); ?>/dev_engine_ui_render.php', getData,
+							// 	function(resultData) {
+							// 		if (-1 != resultData) {
+							// 			//$('#getList_item').html(resultData);
+							// 			//$('#'+getDialogID()).html(resultData);
+							// 			openDialog(resultData);
+							// 		}
+							// 	}
+							// );
 							
+							openEditDialog();
+
 						} else {
 							
 							//Multiple selected items
@@ -991,7 +1052,72 @@ namespace dev_engine\ui;
 						
 					}
 
+					// function getCreateItemDialogTemplate() {
+
+					// 	var action = 'create';
+
+					// 	//prepare getData
+					// 	//var getData = {itemType: currItemType, action: action, js_completionCallBackFuncName: 'ajaxCompletionCallBack'};
+					// 	var getData = {itemType: currItemType, action: action};
+						
+					// 	<?php
+					// 	if ($withParent) {
+					// 	?>
+					// 		// if (withParent) {
+					// 			getData['action'] = 'create_with_parent';
+					// 			getData['parentItemID'] = itemID;
+					// 			getData['parentItemType'] = parentItemType;
+					// 		// }
+					// 	<?php
+					// 	}
+					// 	?>
+
+					// 	$.get('<?php echo \dev_engine\DevEngine::get_dev_engine_path(); ?>/dev_engine_ui_render.php', getData,
+					// 			function(resultData) {
+					// 				if (-1 != resultData) {
+					// 					//openDialog(resultData);
+					// 					$('#getList_createItemDialogTemplate').html(resultData);
+					// 				}
+					// 			}
+					// 		);
+					// }
+
+					// function getEditItemDialogTemplate() {
+
+					// 	var action = 'edit_template';
+
+					// 	//prepare getData
+					// 	//var getData = {itemType: currItemType, action: action, js_completionCallBackFuncName: 'ajaxCompletionCallBack'};
+					// 	//var getData = {itemType: currItemType, action: action, id: selectedItems[0]};
+					// 	var getData = {itemType: currItemType, action: action,  js_completionCallBackFuncName: 'ajaxCompletionCallBack'};
+						
+					// 	<?php
+					// 	if ($withParent) {
+					// 	?>
+					// 		// if (withParent) {
+					// 			getData['action'] = 'edit_with_parent_template';
+					// 			getData['parentItemID'] = itemID;
+					// 			getData['parentItemType'] = parentItemType;
+					// 		// }
+					// 	<?php
+					// 	}
+					// 	?>
+
+					// 	$.get('<?php echo \dev_engine\DevEngine::get_dev_engine_path(); ?>/dev_engine_ui_render.php', getData,
+					// 			function(resultData) {
+					// 				if (-1 != resultData) {
+					// 					//openDialog(resultData);
+					// 					$('#getList_editItemDialogTemplate').html(resultData);
+					// 				}
+					// 			}
+					// 		);
+					// }
+
 					$(document).ready(function(){
+
+						// getCreateItemDialogTemplate();
+
+						// getEditItemDialogTemplate();
 
 						populateItemDataToListControl();
 
@@ -1047,6 +1173,28 @@ namespace dev_engine\ui;
 				}
 				?>
 				<div id="getList_itemDialog"></div>
+				<div id="getList_createItemDialogTemplate" style="display:none;">
+					<?php
+						if ( ! $withParent ) { 
+							\dev_engine\ui\UI::create_item($objectType, 'ajaxCompletionCallBack');
+						} else {
+							//with Parent
+							//objectID is parent object
+							\dev_engine\ui\UI::create_item_with_parent($objectType, 'ajaxCompletionCallBack', $objectID, $parentObjectType);
+						}
+					?>
+				</div>
+				<div id="getList_editItemDialogTemplate" style="display:none;">
+					<?php
+						if ( ! $withParent ) { 
+							\dev_engine\ui\UI::edit_item_template($objectType, 'ajaxCompletionCallBack');
+						} else {
+							//with Parent
+							//objectID is parent object
+							\dev_engine\ui\UI::edit_item_template_with_parent($objectType, 'ajaxCompletionCallBack', $objectID, $parentObjectType);
+						}
+					?>
+				</div>
 				<?php
 			//}
 
@@ -1058,7 +1206,7 @@ namespace dev_engine\ui;
 
 		public static function create_item_with_parent($objectType, $js_completionCallBackFuncName='', $parentObjectID=null, $parentObjectType='') {
 			
-			if ( (null === $objectID) || empty($parentObjectType) ) {
+			if ( (null === $parentObjectID) || empty($parentObjectType) ) {
 				$withParent = false;
 			} else {
 				$withParent = true;		
@@ -1067,8 +1215,8 @@ namespace dev_engine\ui;
 			<script>
 				function createItem() {
 					var itemType = '<?php echo $objectType; ?>';
-					var itemName = $('#itemName').val();
-					var itemDescription = $('#itemDescription').val();
+					var itemName = $('#'+getDialogID()).find('#itemName').val();
+					var itemDescription = $('#'+getDialogID()).find('#itemDescription').val();
 					var completionCallBackFuncName = '<?php echo $js_completionCallBackFuncName; ?>';
 
 					var dataObj =
@@ -1164,6 +1312,106 @@ namespace dev_engine\ui;
 
 			\dev_engine\ui\UserControl::gen_controls($finalDisplayFilter, $aryObjValuesKeyValuePairs, $dataForControls);
 						
+		}
+
+		public static function edit_item_template($objectType, $js_completionCallBackFuncName='') {
+			UI::edit_item_template_with_parent($objectType, $js_completionCallBackFuncName);
+		}
+
+		//
+		//
+		// Not tested with parent
+		//
+		//
+		public static function edit_item_template_with_parent($objectType, $js_completionCallBackFuncName='', $parentObjectID=null, $parentObjectType='') {
+
+			$obj = \dev_engine\ObjectQuery::retrieve(array('object_type_name'=>$objectType, 'id'=>$objectID));
+
+			if (null === $obj) {
+				
+				echo 'Item cannot be found.';
+
+			} else {
+				
+				if ( (null === $objectID) || empty($parentObjectType) ) {
+					$withParent = false;
+				} else {
+					$withParent = true;		
+				}
+
+				?>
+				<script>
+					var editItem_itemType = '<?php echo $objectType; ?>';
+					var editItem_itemID = -1;
+					var editItem_completionCallBackFuncName = '<?php echo $js_completionCallBackFuncName; ?>';
+
+					<?php
+					if ( $withParent ) {
+					?>
+						var editItem_parentItemID = <?php echo $parentObjectID; ?>;
+						var editItem_parentItemType = '<?php echo $parentObjectType; ?>';
+					<?php	
+					}
+					?>
+
+					function updateItem() {
+
+						var itemType = editItem_itemType;
+						var itemID = editItem_itemID;
+						var itemName = $('#'+getDialogID()).find('#itemName').val();
+						var itemDescription = $('#'+getDialogID()).find('#itemDescription').val();
+						var completionCallBackFuncName = editItem_completionCallBackFuncName;
+
+						var dataObj =
+										{action: 'updateItem'
+										,itemType: itemType
+										,id: itemID
+										,itemName: itemName
+										,itemDescription: itemDescription};
+
+						<?php
+						if ( $withParent ) {
+						?>
+						//if (withParent) {	
+								dataObj['action'] = 'updateItemWithParent';
+								dataObj['parentItemID'] = editItem_parentItemID;
+								dataObj['parentItemType'] = editItem_parentItemType;
+						//}
+						<?php	
+						}
+						?>
+
+						console.log('here');
+
+						$.post('<?php echo \dev_engine\DevEngine::get_dev_engine_path(); ?>/dev_engine_ui_ajax.php', dataObj, function(resultData) {
+							
+							console.log('here2');
+
+							if (1 == resultData) {
+							
+								console.log('here3');
+
+								//success
+								$('#editItem').hide();
+
+								if ('' !== completionCallBackFuncName)	{
+									window[completionCallBackFuncName]();
+								}
+
+							} else {
+								console.log('Item update failed.');
+							}
+						});
+					}
+				</script>
+				<div id="editItem">
+				Item Name: <input id="itemName" type="text" value="<?php echo $obj->title; ?>" /><br />
+				Description: <textarea id="itemDescription"><?php echo $obj->description; ?></textarea><br />
+				<button id="btnItemUpdate" onclick="updateItem();">Update</button>
+				</div>
+				<?php
+			
+			}
 		}
 
 		public static function edit_item($objectType, $objectID, $js_completionCallBackFuncName='') {

@@ -79,6 +79,39 @@
 				\dev_engine\ui\UI::create_item_with_parent($_GET['itemType'], $js_completionCallBackFuncName, $_GET['parentItemID'], $_GET['parentItemType']);
 				break;
 			
+			case 'edit_template':
+
+				$js_completionCallBackFuncName = '';
+
+				if (isset($_GET['js_completionCallBackFuncName'])) {
+					$js_completionCallBackFuncName = $_GET['js_completionCallBackFuncName'];
+				}
+
+				\dev_engine\ui\UI::edit_item_template($_GET['itemType'], $js_completionCallBackFuncName);
+
+				break;
+
+			case 'edit_with_parent_template':
+			
+				$js_completionCallBackFuncName = '';
+
+				if (isset($_GET['js_completionCallBackFuncName'])) {
+					$js_completionCallBackFuncName = $_GET['js_completionCallBackFuncName'];
+				}
+
+				if ( 	
+						(! isset($_GET['parentItemID']))
+					||	(! isset($_GET['parentItemType']))
+				) {
+			
+					throw new Exception('Required parameters are not set');
+						
+				}
+
+				\dev_engine\ui\UI::edit_item_template_with_parent($_GET['itemType'], $js_completionCallBackFuncName, $_GET['parentItemID'], $_GET['parentItemType']);
+			
+				break;
+
 			case 'edit':
 
 				if (isset($_GET['id'])) {
