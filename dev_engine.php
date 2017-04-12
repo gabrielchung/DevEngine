@@ -139,7 +139,7 @@ namespace dev_engine;
 			$sql_statement .= '`id` bigint(20) unsigned NOT NULL AUTO_INCREMENT, ';
 			$sql_statement .= '`slug` varchar(1000) NOT NULL, ';
 			$sql_statement .= '`title` varchar(1000) NOT NULL, ';
-			$sql_statement .= '`description` varchar(15000) NOT NULL, ';
+			$sql_statement .= '`description` mediumtext NOT NULL, ';
 			$sql_statement .= '`object_type_id` bigint(20) unsigned NOT NULL, ';
 			//$sql_statement .= '`relationship_type_id` bigint(20) unsigned NOT NULL DEFAULT \'0\', ';
 			$sql_statement .= '`primary_id` bigint(20) unsigned NOT NULL DEFAULT \'0\', ';
@@ -888,9 +888,9 @@ namespace dev_engine;
 		
 		public $table_name = null;
 		public $id;
-		public $slug;
-		public $title;
-		public $description;
+		public $slug = '';
+		public $title = '';
+		public $description = '';
 		public $object_type_id;
 		//public $relatioship_type_id;
 		public $primary_id;
@@ -899,7 +899,7 @@ namespace dev_engine;
 		public $object_type_slug;
 		public $custom_values = array();
 
-		public function __construct($slug=null, $title=null, $description=null, $object_type_slug=null) {
+		public function __construct($slug='', $title='', $description='', $object_type_slug='') {
 			
 			$this->slug = $slug;
 			$this->title = $title;
@@ -990,7 +990,7 @@ namespace dev_engine;
 		public function create() {
 		
 			$object_type = DBObject::get_object_type($this->object_type_slug);
-				
+			
 			if (null === $object_type) {
 				throw new \Exception('Object Type is not present');
 			}
